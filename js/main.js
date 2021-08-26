@@ -7,9 +7,12 @@ let tempoSlider = null
 let inputDevice = null
 let outputDevice = null
 
+// Core
+let ticks = 0
+let steps = 0
+
 // Other shit
 import ClockTicker from './clock-ticker.js'
-let ticks = 0
 let tempo = 120
 let CLOCK_EXTERNAL = 0
 let CLOCK_INTERNAL = 1
@@ -17,10 +20,10 @@ let CLOCK_INTERNAL_SEND = 2
 let clockMode = CLOCK_EXTERNAL
 let internalClock = null
 
-// MIDI input
+// MIDI input and output
 let inputChannel = 3
 let outputChannel = 2
-let heldNotes = {}
+let heldNotes = []
 
 // =============================================================================
 // The main entry point is here, after loading the document / page
@@ -104,15 +107,18 @@ function startArp() {
   tempoSlider.style.display = 'none'
 
   inputDevice.addListener('noteon', inputChannel, (e) => {
-    console.log(`noteon ${e.note} ${e.velocity}`)
-    heldNotes[e.note.number] = e.note
-    console.log(`heldNotes: ${JSON.stringify(heldNotes)}`)
+    console.log(`noteon ${e.note.number} ${e.velocity}`)
+    heldNotes.push(e.note)
   })
 
   inputDevice.addListener('noteoff', inputChannel, (e) => {
     console.log(`noteoff ${e.note} ${e.velocity}`)
-    delete heldNotes[e.note.number]
-    console.log(`heldNotes: ${JSON.stringify(heldNotes)}`)
+    for (let i = 0; i < heldNotes.length; i++) {
+      if (heldNotes[i].number == e.note.number) {
+        heldNotes.splice(i, 1)
+        break
+      }
+    }
   })
 
   if (clockMode == CLOCK_EXTERNAL) {
@@ -139,10 +145,12 @@ function handleTick() {
 
   if (ticks >= interval) {
     ticks = 0
-    for (let noteIndex in heldNotes) {
-      let note = heldNotes[noteIndex]
-      console.log(note)
-      outputDevice.playNote(note.number, outputChannel, { velocity: 1.0, duration: 50 })
-    }
+    steps++
+
+    if (heldNotes.length <= 0) return
+    let noteIndex = steps % heldNotes.length
+    let note = heldNotes[noteIndex]
+    if (!note) return
+    outputDevice.playNote(note.number, outputChannel, { velocity: 0.7, duration: 50 })
   }
 }
