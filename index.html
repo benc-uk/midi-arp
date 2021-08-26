@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MIDI Arp</title>
+
+    <script src="js/main.js" type="module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/webmidi"></script>
+    <link rel="stylesheet" href="css/main.css" />
+    <link
+      rel="shortcut icon"
+      href="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/multiple-musical-notes_1f3b6.png"
+      type="image/png"
+    />
+  </head>
+
+  <body>
+    <div id="main">
+      <div id="title">🎹🎶 MIDI Arp v1</div>
+
+      <div id="controls">
+
+        <select name="inputDevice" id="inputDeviceSel">
+          <option value="" disabled selected>No MIDI devices!</option>
+        </select>
+
+        <select name="outputDevice" id="outputDeviceSel">
+          <option value="" disabled selected>No MIDI devices!</option>
+        </select>        
+
+        <select name="div" id="divSel">
+          <option value="100">1/32</option>
+          <option value="110">1/16</option>
+          <option value="120">1/8</option>
+          <option value="130">1/4</option>
+          <option value="140">1/2</option>
+          <option value="150">1</option>
+        </select>
+        
+        <select name="mode" id="modeSel">
+          <option value="0">External</option>
+          <option value="1">Internal</option>
+          <option value="2">Send Clock</option>
+        </select>
+
+        <input type="range" min="40" max="250" value="120" id="tempoSlider">
+        <label for="tempoSlider" id="tempoSliderLabel"></label>
+      </div>
+
+      <div>
+        <h3>Input Notes</h3>
+        <div id="inputNotes"></div>
+      </div>
+    </div>
+    <footer>
+      Ben Coleman - <a href="https://github.com/benc-uk/midi-arp" target="_blank">[ GitHub ]</a></div>
+    </footer>
+  </body>
+</html>

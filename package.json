@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "webmidi": "^2.5.3"
+  }
+}
