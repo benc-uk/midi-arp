@@ -16,6 +16,7 @@ html {
 #title,
 #controls {
   margin: 0.5rem;
+  display: flex;
 }
 
 #log {
@@ -66,4 +67,20 @@ select {
 footer {
   font-size: 0.8rem;
   padding: 1rem;
+}
+
+label {
+  display: block;
+}
+
+.note {
+  display: inline-block;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background-color: #aaaaaa;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  width: 3rem;
+  border-radius: 10px;
+  text-align: center;
 }

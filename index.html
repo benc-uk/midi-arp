@@ -21,31 +21,79 @@
 
       <div id="controls">
 
-        <select name="inputDevice" id="inputDeviceSel">
-          <option value="" disabled selected>No MIDI devices!</option>
-        </select>
+        <div>
+          <label>Input</label>
+          <select name="inputDevice" id="inputDeviceSel">
+            <option value="" disabled selected>No MIDI devices!</option>
+          </select>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <select name="inputChannel" id="inputChannelSel">
+          </select>  
+        </div>   
 
-        <select name="outputDevice" id="outputDeviceSel">
-          <option value="" disabled selected>No MIDI devices!</option>
-        </select>        
+        <div>
+          <label>Output</label>
+          <select name="outputDevice" id="outputDeviceSel">
+            <option value="" disabled selected>No MIDI devices!</option>
+          </select>  
+        </div>  
+        <div>
+          <label>&nbsp;</label>
+          <select name="outputChannel" id="outputChannelSel">
+          </select>  
+        </div>        
 
-        <select name="div" id="divSel">
-          <option value="100">1/32</option>
-          <option value="110">1/16</option>
-          <option value="120">1/8</option>
-          <option value="130">1/4</option>
-          <option value="140">1/2</option>
-          <option value="150">1</option>
-        </select>
-        
-        <select name="mode" id="modeSel">
-          <option value="0">External</option>
-          <option value="1">Internal</option>
-          <option value="2">Send Clock</option>
-        </select>
+        <div>
+          <label>Division</label>
+          <select name="div" id="divSel">
+            <option value="3">1/32</option>
+            <option selected value="6">1/16</option>
+            <option value="12">1/8</option>
+            <option value="24">1/4</option>
+            <option value="48">1/2</option>
+            <option value="96">1</option>
+          </select>
+        </div>
 
-        <input type="range" min="40" max="250" value="120" id="tempoSlider">
-        <label for="tempoSlider" id="tempoSliderLabel"></label>
+        <div>
+          <label>Mode</label>
+          <select name="mode" id="modeSel">
+            <option value="UP">Up</option>
+            <option value="DOWN">Down</option>
+            <option value="UP_DOWN">Up/Down</option>
+            <option value="PLAYED">Played</option>
+            <option value="RANDOM">Random</option>
+          </select>
+        </div>        
+        <div>
+          <label>Range</label>
+          <select name="range" id="rangeSel">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Clock</label>
+          <select name="clockMode" id="clockModeSel">
+            <option value="CLOCK_EXTERNAL">External</option>
+            <option value="CLOCK_INTERNAL">Internal</option>
+            <option value="CLOCK_INTERNAL_SEND">Send Clock</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="tempoSlider" id="tempoSliderLabel">Tempo</label>
+          <input type="range" min="40" max="250" value="120" id="tempoSlider"> 
+        </div>
+      </div>
+
+      <div id="controls">
+        <button id="startStop">START</button>&nbsp;
+        <button id="hold">HOLD</button>
       </div>
 
       <div>
