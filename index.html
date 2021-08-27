@@ -1,108 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MIDI Arp</title>
 
-    <script src="js/main.js" type="module"></script>
-    <script src="https://cdn.jsdelivr.net/npm/webmidi"></script>
-    <link rel="stylesheet" href="css/main.css" />
-    <link
-      rel="shortcut icon"
-      href="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/multiple-musical-notes_1f3b6.png"
-      type="image/png"
-    />
-  </head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MIDI Arp</title>
 
-  <body>
-    <div id="main">
-      <div id="title">🎹🎶 MIDI Arp v1</div>
+  <script src="js/main.js" type="module"></script>
+  <script src="https://cdn.jsdelivr.net/npm/webmidi"></script>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300&display=swap" rel="stylesheet">
+  <link rel="shortcut icon"
+    href="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/multiple-musical-notes_1f3b6.png"
+    type="image/png" />
+</head>
 
-      <div id="controls">
+<body>
+  <div id="main">
+    <h1>MIDI Arpeggiator</h1>
 
-        <div>
-          <label>Input</label>
-          <select name="inputDevice" id="inputDeviceSel">
-            <option value="" disabled selected>No MIDI devices!</option>
-          </select>
-        </div>
-        <div>
-          <label>&nbsp;</label>
-          <select name="inputChannel" id="inputChannelSel">
-          </select>  
-        </div>   
-
-        <div>
-          <label>Output</label>
-          <select name="outputDevice" id="outputDeviceSel">
-            <option value="" disabled selected>No MIDI devices!</option>
-          </select>  
-        </div>  
-        <div>
-          <label>&nbsp;</label>
-          <select name="outputChannel" id="outputChannelSel">
-          </select>  
-        </div>        
-
-        <div>
-          <label>Division</label>
-          <select name="div" id="divSel">
-            <option value="3">1/32</option>
-            <option selected value="6">1/16</option>
-            <option value="12">1/8</option>
-            <option value="24">1/4</option>
-            <option value="48">1/2</option>
-            <option value="96">1</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Mode</label>
-          <select name="mode" id="modeSel">
-            <option value="UP">Up</option>
-            <option value="DOWN">Down</option>
-            <option value="UP_DOWN">Up/Down</option>
-            <option value="PLAYED">Played</option>
-            <option value="RANDOM">Random</option>
-          </select>
-        </div>        
-        <div>
-          <label>Range</label>
-          <select name="range" id="rangeSel">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Clock</label>
-          <select name="clockMode" id="clockModeSel">
-            <option value="CLOCK_EXTERNAL">External</option>
-            <option value="CLOCK_INTERNAL">Internal</option>
-            <option value="CLOCK_INTERNAL_SEND">Send Clock</option>
-          </select>
-        </div>
-
-        <div>
-          <label for="tempoSlider" id="tempoSliderLabel">Tempo</label>
-          <input type="range" min="40" max="250" value="120" id="tempoSlider"> 
-        </div>
+    <div id="controls">
+      <div>
+        <label>Input</label>
+        <select name="inputDevice" id="inputDeviceSel">
+          <option value="" disabled selected>No MIDI devices!</option>
+        </select>
       </div>
+      <div>
+        <label>&nbsp;</label>
+        <select name="inputChannel" id="inputChannelSel">
+        </select>
+      </div>
+      <div>
+        <label>Output</label>
+        <select name="outputDevice" id="outputDeviceSel">
+          <option value="" disabled selected>No MIDI devices!</option>
+        </select>
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <select name="outputChannel" id="outputChannelSel">
+        </select>
+      </div>
+    </div>
 
-      <div id="controls">
-        <button id="startStop">START</button>&nbsp;
-        <button id="hold">HOLD</button>
+    <div id="controls">
+      <div>
+        <label>Division</label>
+        <select name="div" id="divSel">
+          <option value="3">1/32</option>
+          <option selected value="6">1/16</option>
+          <option value="8">1/16T</option>
+          <option value="12">1/8</option>
+          <option value="16">1/8T</option>
+          <option value="24">1/4</option>
+          <option value="32">1/4T</option>
+          <option value="48">1/2</option>
+          <option value="96">1</option>
+        </select>
       </div>
 
       <div>
-        <h3>Input Notes</h3>
-        <div id="inputNotes"></div>
+        <label>Mode</label>
+        <select name="mode" id="modeSel">
+          <option value="UP">Up</option>
+          <option value="DOWN">Down</option>
+          <option value="UP_DOWN_INC">Up/Down Inc</option>
+          <option value="UP_DOWN_EXC">Up/Down Exc</option>
+          <option value="PLAYED">Played</option>
+          <option value="RANDOM">Random</option>
+        </select>
+      </div>
+      <div>
+        <label>Range</label>
+        <select name="range" id="rangeSel">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Clock</label>
+        <select name="clockMode" id="clockModeSel">
+          <option value="CLOCK_EXTERNAL">External</option>
+          <option value="CLOCK_INTERNAL">Internal</option>
+          <option value="CLOCK_INTERNAL_SEND">Send Clock</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="tempoSlider" id="tempoSliderLabel">Tempo</label>
+        <input class="slider" type="range" min="40" max="250" value="120" id="tempoSlider">
       </div>
     </div>
-    <footer>
-      Ben Coleman - <a href="https://github.com/benc-uk/midi-arp" target="_blank">[ GitHub ]</a></div>
-    </footer>
-  </body>
+
+    <div id="controls">
+      <button id="startStop">START</button>&nbsp;
+      <button id="hold">HOLD</button>
+    </div>
+
+    <div>
+      <h3>Input Notes</h3>
+      <div id="inputNotes"></div>
+    </div>
+  </div>
+  <footer>
+    Ben Coleman - <a href="https://github.com/benc-uk/midi-arp" target="_blank">[ GitHub ]</a></div>
+  </footer>
+</body>
+
 </html>

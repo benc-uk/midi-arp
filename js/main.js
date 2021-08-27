@@ -18,6 +18,7 @@ let outputDevice = null
 // Core
 let ticks = 0
 let step = 0
+let direction = 1
 
 // Other shit
 import ClockTicker from './clock-ticker.js'
@@ -78,6 +79,9 @@ window.addEventListener('load', async () => {
   })
 })
 
+// =============================================================================
+// Initialize after getting MIDI access
+// =============================================================================
 function initialize() {
   console.log('### Set up MIDI input and output devices...')
 
@@ -100,12 +104,12 @@ function initialize() {
     outputDeviceSelect.appendChild(option)
   }
 
-  // !!! TEST HARNESS CODE !!!
-  // inputDevice = WebMidi.inputs[0]
-  // outputDevice = WebMidi.outputs[0]
-  // startArp()
+  loadState()
 }
 
+// =============================================================================
+// Called to select MIDI devices
+// =============================================================================
 function deviceSelected(evt) {
   if (!evt.target.value) return
 
@@ -117,6 +121,9 @@ function deviceSelected(evt) {
   }
 }
 
+// =============================================================================
+// Initialize the arpeggiator
+// =============================================================================
 function initalizeArp() {
   if (!inputDevice || !outputDevice) return
   let clockMode = clockModeSelect.value
@@ -150,11 +157,24 @@ function initalizeArp() {
     internalClock = new ClockTicker(tempo)
     internalClock.addEventListener('tick', handleTick)
   }
+
+  saveState()
 }
 
+// =============================================================================
+// Add a note to the held notes
+// =============================================================================
 function addNote(note) {
   heldNotes.push(note)
   heldNotesSorted.push(note)
+  // if (rangeSelect.value == 2) {
+  //   heldNotes.push({ number: note.number + 12 })
+  //   heldNotesSorted.push({ number: note.number + 12 })
+  // }
+  // if (rangeSelect.value > 2) {
+  //   heldNotes.push(note + 24)
+  //   heldNotesSorted.push(note + 24)
+  // }
   heldNotesSorted.sort((a, b) => a.number - b.number)
   console.log(JSON.stringify(heldNotesSorted))
 
@@ -165,6 +185,9 @@ function addNote(note) {
   notesDiv.appendChild(e)
 }
 
+// =============================================================================
+// Remove a note from the held notes
+// =============================================================================
 function removeNote(note) {
   for (let i = 0; i < heldNotes.length; i++) {
     if (heldNotes[i].number == note.number) {
@@ -184,7 +207,9 @@ function removeNote(note) {
   console.log(JSON.stringify(heldNotesSorted))
 }
 
-// The whole arp logic is here, called on every MIDI clock tick
+// =============================================================================
+// Main arpeggiator logic here processed per tick
+// =============================================================================
 function handleTick() {
   ticks++
   let interval = divSelect.value
@@ -196,27 +221,49 @@ function handleTick() {
 
   if (ticks >= interval) {
     ticks = 0
+    let seqLength = heldNotes.length
     if (mode == 'UP' || mode == 'PLAYED') {
       step++
-      if (step >= heldNotes.length) {
+      if (step >= seqLength) {
         step = 0
       }
     }
     if (mode == 'DOWN') {
       step--
       if (step < 0) {
-        step = heldNotes.length - 1
+        step = seqLength - 1
+      }
+    }
+    if (mode == 'UP_DOWN_INC') {
+      step += direction
+      if (step < 0) {
+        step = 0
+        direction = 1
+      }
+      if (step >= seqLength) {
+        step = seqLength - 1
+        direction = -1
+      }
+    }
+    if (mode == 'UP_DOWN_EXC') {
+      step += direction
+      if (step <= 0) {
+        step = 0
+        direction = 1
+      }
+      if (step >= seqLength - 1) {
+        step = seqLength - 1
+        direction = -1
       }
     }
     if (mode == 'RANDOM') {
-      step = Math.floor(Math.random() * heldNotes.length)
+      step = Math.floor(Math.random() * seqLength)
     }
 
     if (heldNotes.length <= 0) return
     if (heldNotesSorted.length <= 0) return
 
     let note
-
     if (mode == 'PLAYED') {
       note = heldNotes[step]
     } else {
@@ -224,7 +271,49 @@ function handleTick() {
     }
 
     if (!note) return
-    console.log(`STEP:${step} = ${note.number}`)
-    outputDevice.playNote(note.number, outputChannelSelect.value, { velocity: 0.7, duration: 50 })
+    let noteNumber = note.number
+    console.log(`STEP:${step} = ${noteNumber}`)
+    outputDevice.playNote(noteNumber, outputChannelSelect.value, { velocity: 0.7, duration: 80 })
+  }
+}
+
+// =============================================================================
+// Save app state to local storage
+// =============================================================================
+function saveState() {
+  localStorage.setItem(
+    'arp_state',
+    JSON.stringify({
+      tempo: tempo,
+      div: divSelect.value,
+      mode: modeSelect.value,
+      clockMode: clockModeSelect.value,
+      inputDevice: inputDeviceSelect.value,
+      outputDevice: outputDeviceSelect.value,
+      inputChannel: inputChannelSelect.value,
+      outputChannel: outputChannelSelect.value
+    })
+  )
+}
+
+// =============================================================================
+// Restore app state from local storage
+// =============================================================================
+function loadState() {
+  let state = JSON.parse(localStorage.getItem('arp_state'))
+  if (state) {
+    tempo = state.tempo
+    divSelect.value = state.div
+    modeSelect.value = state.mode
+    clockModeSelect.value = state.clockMode
+    inputDeviceSelect.value = state.inputDevice
+    outputDeviceSelect.value = state.outputDevice
+    inputChannelSelect.value = state.inputChannel
+    outputChannelSelect.value = state.outputChannel
+
+    inputDevice = WebMidi.getInputById(state.inputDevice)
+    outputDevice = WebMidi.getOutputById(state.outputDevice)
+
+    initalizeArp()
   }
 }
