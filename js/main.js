@@ -2,6 +2,7 @@
 let inputDeviceSelect = null
 let outputDeviceSelect = null
 let tempoSlider = null
+let notesDiv = null
 
 // MIDI devices
 let inputDevice = null
@@ -34,6 +35,7 @@ window.addEventListener('load', async () => {
   outputDeviceSelect = document.getElementById('outputDeviceSel')
   outputDeviceSelect.addEventListener('change', deviceSelected)
   tempoSlider = document.getElementById('tempoSlider')
+  notesDiv = document.getElementById('inputNotes')
 
   tempoSlider.addEventListener('change', (e) => {
     tempo = tempoSlider.value
@@ -98,8 +100,11 @@ function deviceSelected(evt) {
 }
 
 function startArp() {
+  heldNotes = []
   console.log(`###----- startArp ${clockMode}`)
   inputDevice.removeListener('clock', 'all')
+  inputDevice.removeListener('noteon', 'all')
+  inputDevice.removeListener('noteoff', 'all')
   if (internalClock) {
     internalClock.removeEventListener('tick', handleTick)
     internalClock.removeEventListener('tick', handleTick)
@@ -107,18 +112,11 @@ function startArp() {
   tempoSlider.style.display = 'none'
 
   inputDevice.addListener('noteon', inputChannel, (e) => {
-    console.log(`noteon ${e.note.number} ${e.velocity}`)
-    heldNotes.push(e.note)
+    addNote(e.note)
   })
 
   inputDevice.addListener('noteoff', inputChannel, (e) => {
-    console.log(`noteoff ${e.note} ${e.velocity}`)
-    for (let i = 0; i < heldNotes.length; i++) {
-      if (heldNotes[i].number == e.note.number) {
-        heldNotes.splice(i, 1)
-        break
-      }
-    }
+    removeNote(e.note)
   })
 
   if (clockMode == CLOCK_EXTERNAL) {
@@ -135,6 +133,26 @@ function startArp() {
   }
 }
 
+function addNote(note) {
+  heldNotes.push(note)
+  var e = document.createElement('h2')
+  e.innerHTML = `${note.name}${note.octave}`
+  e.style.color = '#338833'
+  e.id = `note_${note.number}`
+  notesDiv.appendChild(e)
+}
+
+function removeNote(note) {
+  for (let i = 0; i < heldNotes.length; i++) {
+    if (heldNotes[i].number == note.number) {
+      heldNotes.splice(i, 1)
+      break
+    }
+  }
+  document.getElementById(`note_${note.number}`).remove()
+}
+
+// The whole arp logic is here, called on every MIDI clock tick
 function handleTick() {
   ticks++
   let interval = 12
