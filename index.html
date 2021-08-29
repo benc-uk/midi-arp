@@ -19,9 +19,9 @@
 
 <body>
   <div id="main">
-    <div id="title">MIDI Arpeggiator (v1.1)</div>
+    <div id="title">MIDI Arpeggiator</div>
 
-    <div id="controls">
+    <div id="row">
       <div>
         <label>Input</label>
         <select name="inputDevice" id="inputDeviceSel">
@@ -46,7 +46,7 @@
       </div>
     </div>
 
-    <div id="controls">
+    <div id="row">
       <div>
         <label>Division</label>
         <select name="div" id="divSel">
@@ -113,16 +113,12 @@
       </div>
     </div>
 
-    <div id="controls">
-      <button id="hold">HOLD</button>
-    </div>
-
-    <div>
-      <div id="inputNotes"></div>
+    <div id="row">
+      <button id="hold" style="margin: 0.52rem;">LATCH</button><div id="inputNotes"></div>
     </div>
   </div>
   <footer>
-    Ben Coleman - <a href="https://github.com/benc-uk/midi-arp" target="_blank">[ GitHub ]</a></div>
+    v1.1, Ben Coleman - <a href="https://github.com/benc-uk/midi-arp" target="_blank">[ GitHub ]</a></div>
   </footer>
 </body>
 

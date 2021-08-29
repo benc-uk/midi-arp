@@ -1,3 +1,6 @@
+import ClockTicker from './clock-ticker.js'
+import { keyToNote } from './keyboard.js'
+
 // HTML nodes
 let inputDeviceSelect = null
 let outputDeviceSelect = null
@@ -27,42 +30,13 @@ let doubler = 0
 let hold = false
 
 // Other shit
-import ClockTicker from './clock-ticker.js'
+
 let tempo = 120
 let internalClock = null
 
 // MIDI input and output
 let heldNotes = []
 let heldNotesSorted = []
-
-// map keys to MIDI notes
-const keyToNote = {
-  z: { number: 36, name: 'C', octave: 2 },
-  s: { number: 37, name: 'C#', octave: 2 },
-  x: { number: 38, name: 'D', octave: 2 },
-  d: { number: 39, name: 'D#', octave: 2 },
-  c: { number: 40, name: 'E', octave: 2 },
-  v: { number: 41, name: 'F', octave: 2 },
-  g: { number: 42, name: 'F#', octave: 2 },
-  b: { number: 43, name: 'G', octave: 2 },
-  h: { number: 44, name: 'G#', octave: 2 },
-  n: { number: 45, name: 'A', octave: 2 },
-  j: { number: 46, name: 'A#', octave: 2 },
-  m: { number: 47, name: 'B', octave: 2 },
-
-  q: { number: 48, name: 'C', octave: 3 },
-  2: { number: 49, name: 'C#', octave: 3 },
-  w: { number: 50, name: 'D', octave: 3 },
-  3: { number: 51, name: 'D#', octave: 3 },
-  e: { number: 52, name: 'E', octave: 3 },
-  r: { number: 53, name: 'F', octave: 3 },
-  5: { number: 54, name: 'F#', octave: 3 },
-  t: { number: 55, name: 'G', octave: 3 },
-  6: { number: 56, name: 'G#', octave: 3 },
-  y: { number: 57, name: 'A', octave: 3 },
-  7: { number: 58, name: 'A#', octave: 3 },
-  u: { number: 59, name: 'B', octave: 3 }
-}
 
 // =============================================================================
 // The main entry point is here, after loading the document / page
@@ -202,7 +176,6 @@ function initalizeArp() {
     internalClock.removeEventListener('tick', handleTick)
     internalClock.removeEventListener('tick', handleTick)
   }
-  console.log(tempoSlider)
   tempoSlider.disabled = true
 
   inputDevice.addListener('noteon', inputChannelSelect.value, (e) => {
@@ -366,7 +339,10 @@ function handleTick() {
   let noteNumber = note.number + octave * 12
 
   console.log(`STEP:${step}, OCT:${octave} -> ${noteNumber}`)
-  outputDevice.playNote(noteNumber, outputChannelSelect.value, { velocity: 1.0, duration: stepInterval * parseFloat(gateSelect.value) })
+  outputDevice.playNote(noteNumber, outputChannelSelect.value, {
+    velocity: 1.0,
+    duration: stepInterval * parseFloat(gateSelect.value)
+  })
 }
 
 // =============================================================================
