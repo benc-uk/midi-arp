@@ -15,7 +15,10 @@ html {
   flex-direction: column;
 }
 
-#title,
+#title {
+  font-size: 2rem;
+}
+
 #controls {
   margin: 0.5rem;
   display: flex;
@@ -74,4 +77,11 @@ label {
   width: 3rem;
   border-radius: 10px;
   text-align: center;
+}
+.note.on {
+  background-color: #0e5a5a;
+}
+
+.off {
+  background-color: #5f5f5f;
 }

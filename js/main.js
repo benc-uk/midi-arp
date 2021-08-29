@@ -7,6 +7,8 @@ let modeSelect = null
 let rangeSelect = null
 let clockModeSelect = null
 let divSelect = null
+let gateSelect = null
+let holdButton = null
 
 let tempoSlider = null
 let notesDiv = null
@@ -17,8 +19,12 @@ let outputDevice = null
 
 // Core
 let ticks = 0
+let lastStepTime = 0
 let step = 0
 let direction = 1
+let octave = 0
+let doubler = 0
+let hold = false
 
 // Other shit
 import ClockTicker from './clock-ticker.js'
@@ -43,13 +49,31 @@ window.addEventListener('load', async () => {
   outputChannelSelect.addEventListener('change', initalizeArp)
 
   modeSelect = document.getElementById('modeSel')
+  modeSelect.addEventListener('change', saveState)
   divSelect = document.getElementById('divSel')
+  divSelect.addEventListener('change', saveState)
   rangeSelect = document.getElementById('rangeSel')
+  rangeSelect.addEventListener('change', saveState)
+  gateSelect = document.getElementById('gateSel')
+  gateSelect.addEventListener('change', saveState)
+
   clockModeSelect = document.getElementById('clockModeSel')
   clockModeSelect.addEventListener('change', initalizeArp)
 
   tempoSlider = document.getElementById('tempoSlider')
   notesDiv = document.getElementById('inputNotes')
+
+  holdButton = document.getElementById('hold')
+  holdButton.className = hold ? '' : 'off'
+  holdButton.addEventListener('click', () => {
+    hold = !hold
+    if (!hold) {
+      notesDiv.innerHTML = ''
+      heldNotes = []
+      heldNotesSorted = []
+    }
+    holdButton.className = hold ? '' : 'off'
+  })
 
   for (let c = 1; c <= 16; c++) {
     let option = document.createElement('option')
@@ -147,13 +171,11 @@ function initalizeArp() {
   })
 
   if (clockMode == 'CLOCK_EXTERNAL') {
-    console.log('EXTERNAL CLOCK')
     inputDevice.addListener('clock', 'all', handleTick)
   }
 
   if (clockMode == 'CLOCK_INTERNAL' || clockMode == 'CLOCK_INTERNAL_SEND') {
     tempoSlider.disabled = false
-    console.log('CLOCK_INTERNAL')
     internalClock = new ClockTicker(tempo)
     internalClock.addEventListener('tick', handleTick)
   }
@@ -165,18 +187,13 @@ function initalizeArp() {
 // Add a note to the held notes
 // =============================================================================
 function addNote(note) {
+  console.log(internalClock)
+  // Don't allow duplicates
+  if (heldNotes.find((n) => n.number == note.number)) return
+
   heldNotes.push(note)
   heldNotesSorted.push(note)
-  // if (rangeSelect.value == 2) {
-  //   heldNotes.push({ number: note.number + 12 })
-  //   heldNotesSorted.push({ number: note.number + 12 })
-  // }
-  // if (rangeSelect.value > 2) {
-  //   heldNotes.push(note + 24)
-  //   heldNotesSorted.push(note + 24)
-  // }
   heldNotesSorted.sort((a, b) => a.number - b.number)
-  console.log(JSON.stringify(heldNotesSorted))
 
   var e = document.createElement('div')
   e.innerHTML = `${note.name}${note.octave}`
@@ -189,6 +206,8 @@ function addNote(note) {
 // Remove a note from the held notes
 // =============================================================================
 function removeNote(note) {
+  if (hold) return
+
   for (let i = 0; i < heldNotes.length; i++) {
     if (heldNotes[i].number == note.number) {
       heldNotes.splice(i, 1)
@@ -204,12 +223,12 @@ function removeNote(note) {
   try {
     document.getElementById(`note_${note.number}`).remove()
   } catch (e) {}
-  console.log(JSON.stringify(heldNotesSorted))
 }
 
 // =============================================================================
 // Main arpeggiator logic here processed per tick
 // =============================================================================
+
 function handleTick() {
   ticks++
   let interval = divSelect.value
@@ -220,22 +239,64 @@ function handleTick() {
   }
 
   if (ticks >= interval) {
+    let stepInterval = performance.now() - lastStepTime
+    lastStepTime = performance.now()
     ticks = 0
     let seqLength = heldNotes.length
+
     if (mode == 'UP' || mode == 'PLAYED') {
       step++
       if (step >= seqLength) {
         step = 0
+        octave++
+        if (octave >= parseInt(rangeSelect.value)) {
+          octave = 0
+        }
+      }
+    }
+    if (mode == 'UP2') {
+      step++
+      doubler++
+      if (doubler % 2 == 0) {
+        step--
+        doubler = 0
+      }
+      if (step >= seqLength) {
+        step = 0
+        octave++
+        if (octave >= parseInt(rangeSelect.value)) {
+          octave = 0
+        }
       }
     }
     if (mode == 'DOWN') {
       step--
       if (step < 0) {
         step = seqLength - 1
+        octave++
+        if (octave >= parseInt(rangeSelect.value)) {
+          octave = 0
+        }
+      }
+    }
+    if (mode == 'DOWN2') {
+      step--
+      doubler++
+      if (doubler % 2 == 0) {
+        step++
+        doubler = 0
+      }
+      if (step < 0) {
+        step = seqLength - 1
+        octave++
+        if (octave >= parseInt(rangeSelect.value)) {
+          octave = 0
+        }
       }
     }
     if (mode == 'UP_DOWN_INC') {
       step += direction
+
       if (step < 0) {
         step = 0
         direction = 1
@@ -243,6 +304,10 @@ function handleTick() {
       if (step >= seqLength) {
         step = seqLength - 1
         direction = -1
+        octave++
+        if (octave >= parseInt(rangeSelect.value)) {
+          octave = 0
+        }
       }
     }
     if (mode == 'UP_DOWN_EXC') {
@@ -254,10 +319,15 @@ function handleTick() {
       if (step >= seqLength - 1) {
         step = seqLength - 1
         direction = -1
+        octave++
+        if (octave >= parseInt(rangeSelect.value)) {
+          octave = 0
+        }
       }
     }
     if (mode == 'RANDOM') {
       step = Math.floor(Math.random() * seqLength)
+      octave = Math.floor(Math.random() * parseInt(rangeSelect.value)) + 1
     }
 
     if (heldNotes.length <= 0) return
@@ -271,9 +341,17 @@ function handleTick() {
     }
 
     if (!note) return
-    let noteNumber = note.number
-    console.log(`STEP:${step} = ${noteNumber}`)
-    outputDevice.playNote(noteNumber, outputChannelSelect.value, { velocity: 0.7, duration: 80 })
+
+    let noteDiv = document.getElementById(`note_${note.number}`)
+    noteDiv.classList.add('on')
+    setTimeout(() => {
+      noteDiv.classList.remove('on')
+    }, stepInterval * 0.9)
+
+    let noteNumber = note.number + octave * 12
+
+    console.log(`STEP:${step}, OCT:${octave} -> ${noteNumber}`)
+    outputDevice.playNote(noteNumber, outputChannelSelect.value, { velocity: 1.0, duration: stepInterval * parseFloat(gateSelect.value) })
   }
 }
 
@@ -287,6 +365,8 @@ function saveState() {
       tempo: tempo,
       div: divSelect.value,
       mode: modeSelect.value,
+      range: rangeSelect.value,
+      gate: gateSelect.value,
       clockMode: clockModeSelect.value,
       inputDevice: inputDeviceSelect.value,
       outputDevice: outputDeviceSelect.value,
@@ -303,8 +383,12 @@ function loadState() {
   let state = JSON.parse(localStorage.getItem('arp_state'))
   if (state) {
     tempo = state.tempo
+    tempoSlider.value = tempo
+    document.getElementById('tempoSliderLabel').innerHTML = `Tempo: ${tempo} BPM`
     divSelect.value = state.div
     modeSelect.value = state.mode
+    rangeSelect.value = state.range
+    gateSelect.value = state.gate
     clockModeSelect.value = state.clockMode
     inputDeviceSelect.value = state.inputDevice
     outputDeviceSelect.value = state.outputDevice

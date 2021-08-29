@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MIDI Arp</title>
+  <title>MIDI Arpeggiator</title>
 
   <script src="js/main.js" type="module"></script>
   <script src="https://cdn.jsdelivr.net/npm/webmidi"></script>
@@ -19,7 +19,7 @@
 
 <body>
   <div id="main">
-    <h1>MIDI Arpeggiator</h1>
+    <div id="title">MIDI Arpeggiator (v1.0)</div>
 
     <div id="controls">
       <div>
@@ -61,12 +61,27 @@
           <option value="96">1</option>
         </select>
       </div>
+      <div>
+        <label>Gate</label>
+        <select name="gate" id="gateSel">
+          <option value="0.2">20%</option>
+          <option value="0.3">30%</option>
+          <option value="0.4">40%</option>
+          <option value="0.5" selected>50%</option>
+          <option value="0.6">60%</option>
+          <option value="0.7">70%</option>
+          <option value="0.8">80%</option>
+          <option value="0.9">90%</option>
+        </select>
+      </div>
 
       <div>
         <label>Mode</label>
         <select name="mode" id="modeSel">
           <option value="UP">Up</option>
+          <option value="UP2">Up x 2</option>
           <option value="DOWN">Down</option>
+          <option value="DOWN2">Down x 2</option>
           <option value="UP_DOWN_INC">Up/Down Inc</option>
           <option value="UP_DOWN_EXC">Up/Down Exc</option>
           <option value="PLAYED">Played</option>
@@ -79,6 +94,7 @@
           <option value="1">1</option>
           <option value="2">2</option>
           <option value="3">3</option>
+          <option value="4">4</option>
         </select>
       </div>
 
@@ -98,12 +114,10 @@
     </div>
 
     <div id="controls">
-      <button id="startStop">START</button>&nbsp;
       <button id="hold">HOLD</button>
     </div>
 
     <div>
-      <h3>Input Notes</h3>
       <div id="inputNotes"></div>
     </div>
   </div>

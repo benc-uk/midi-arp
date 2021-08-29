@@ -15,6 +15,10 @@ export default class ClockTicker extends EventTarget {
     this.tick()
   }
 
+  getInterval() {
+    return this.length
+  }
+
   tick() {
     if (!this.pos) {
       this.pos = performance.now()
