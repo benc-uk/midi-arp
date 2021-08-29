@@ -78,6 +78,7 @@ label {
   border-radius: 10px;
   text-align: center;
 }
+
 .note.on {
   background-color: #0e5a5a;
 }

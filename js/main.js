@@ -35,6 +35,35 @@ let internalClock = null
 let heldNotes = []
 let heldNotesSorted = []
 
+// map keys to MIDI notes
+const keyToNote = {
+  z: { number: 36, name: 'C', octave: 2 },
+  s: { number: 37, name: 'C#', octave: 2 },
+  x: { number: 38, name: 'D', octave: 2 },
+  d: { number: 39, name: 'D#', octave: 2 },
+  c: { number: 40, name: 'E', octave: 2 },
+  v: { number: 41, name: 'F', octave: 2 },
+  g: { number: 42, name: 'F#', octave: 2 },
+  b: { number: 43, name: 'G', octave: 2 },
+  h: { number: 44, name: 'G#', octave: 2 },
+  n: { number: 45, name: 'A', octave: 2 },
+  j: { number: 46, name: 'A#', octave: 2 },
+  m: { number: 47, name: 'B', octave: 2 },
+
+  q: { number: 48, name: 'C', octave: 3 },
+  2: { number: 49, name: 'C#', octave: 3 },
+  w: { number: 50, name: 'D', octave: 3 },
+  3: { number: 51, name: 'D#', octave: 3 },
+  e: { number: 52, name: 'E', octave: 3 },
+  r: { number: 53, name: 'F', octave: 3 },
+  5: { number: 54, name: 'F#', octave: 3 },
+  t: { number: 55, name: 'G', octave: 3 },
+  6: { number: 56, name: 'G#', octave: 3 },
+  y: { number: 57, name: 'A', octave: 3 },
+  7: { number: 58, name: 'A#', octave: 3 },
+  u: { number: 59, name: 'B', octave: 3 }
+}
+
 // =============================================================================
 // The main entry point is here, after loading the document / page
 // =============================================================================
@@ -90,6 +119,19 @@ window.addEventListener('load', async () => {
     tempo = tempoSlider.value
     document.getElementById('tempoSliderLabel').innerHTML = `Tempo: ${tempo} BPM`
     initalizeArp()
+  })
+
+  document.addEventListener('keydown', (e) => {
+    let note = keyToNote[e.key]
+    if (note) {
+      addNote(note)
+    }
+  })
+  document.addEventListener('keyup', (e) => {
+    let note = keyToNote[e.key]
+    if (note) {
+      removeNote(note)
+    }
   })
 
   WebMidi.enable(function (err) {
@@ -160,6 +202,7 @@ function initalizeArp() {
     internalClock.removeEventListener('tick', handleTick)
     internalClock.removeEventListener('tick', handleTick)
   }
+  console.log(tempoSlider)
   tempoSlider.disabled = true
 
   inputDevice.addListener('noteon', inputChannelSelect.value, (e) => {
@@ -187,7 +230,6 @@ function initalizeArp() {
 // Add a note to the held notes
 // =============================================================================
 function addNote(note) {
-  console.log(internalClock)
   // Don't allow duplicates
   if (heldNotes.find((n) => n.number == note.number)) return
 
@@ -231,128 +273,100 @@ function removeNote(note) {
 
 function handleTick() {
   ticks++
-  let interval = divSelect.value
-  let mode = modeSelect.value
-
   if (clockModeSelect.value == 'CLOCK_INTERNAL_SEND') {
     outputDevice.sendClock()
   }
+  let interval = divSelect.value
+  if (ticks < interval) return
 
-  if (ticks >= interval) {
-    let stepInterval = performance.now() - lastStepTime
-    lastStepTime = performance.now()
-    ticks = 0
-    let seqLength = heldNotes.length
+  // If we get here we process and play the arp step
+  ticks = 0
 
-    if (mode == 'UP' || mode == 'PLAYED') {
-      step++
-      if (step >= seqLength) {
-        step = 0
-        octave++
-        if (octave >= parseInt(rangeSelect.value)) {
-          octave = 0
-        }
-      }
-    }
+  let mode = modeSelect.value
+  let stepInterval = performance.now() - lastStepTime
+  lastStepTime = performance.now()
+
+  let seqLength = heldNotes.length
+
+  if (mode == 'UP' || mode == 'PLAYED' || mode == 'UP2') {
+    step++
     if (mode == 'UP2') {
-      step++
       doubler++
       if (doubler % 2 == 0) {
         step--
         doubler = 0
       }
-      if (step >= seqLength) {
-        step = 0
-        octave++
-        if (octave >= parseInt(rangeSelect.value)) {
-          octave = 0
-        }
+    }
+    if (step >= seqLength) {
+      step = 0
+      octave++
+      if (octave >= parseInt(rangeSelect.value)) {
+        octave = 0
       }
     }
-    if (mode == 'DOWN') {
-      step--
-      if (step < 0) {
-        step = seqLength - 1
-        octave++
-        if (octave >= parseInt(rangeSelect.value)) {
-          octave = 0
-        }
-      }
-    }
+  }
+  if (mode == 'DOWN' || mode == 'DOWN2') {
+    step--
     if (mode == 'DOWN2') {
-      step--
       doubler++
       if (doubler % 2 == 0) {
         step++
         doubler = 0
       }
-      if (step < 0) {
-        step = seqLength - 1
-        octave++
-        if (octave >= parseInt(rangeSelect.value)) {
-          octave = 0
-        }
+    }
+    if (step < 0) {
+      step = seqLength - 1
+      octave++
+      if (octave >= parseInt(rangeSelect.value)) {
+        octave = 0
       }
     }
-    if (mode == 'UP_DOWN_INC') {
-      step += direction
-
-      if (step < 0) {
-        step = 0
-        direction = 1
-      }
-      if (step >= seqLength) {
-        step = seqLength - 1
-        direction = -1
-        octave++
-        if (octave >= parseInt(rangeSelect.value)) {
-          octave = 0
-        }
-      }
-    }
-    if (mode == 'UP_DOWN_EXC') {
-      step += direction
-      if (step <= 0) {
-        step = 0
-        direction = 1
-      }
-      if (step >= seqLength - 1) {
-        step = seqLength - 1
-        direction = -1
-        octave++
-        if (octave >= parseInt(rangeSelect.value)) {
-          octave = 0
-        }
-      }
-    }
-    if (mode == 'RANDOM') {
-      step = Math.floor(Math.random() * seqLength)
-      octave = Math.floor(Math.random() * parseInt(rangeSelect.value)) + 1
-    }
-
-    if (heldNotes.length <= 0) return
-    if (heldNotesSorted.length <= 0) return
-
-    let note
-    if (mode == 'PLAYED') {
-      note = heldNotes[step]
-    } else {
-      note = heldNotesSorted[step]
-    }
-
-    if (!note) return
-
-    let noteDiv = document.getElementById(`note_${note.number}`)
-    noteDiv.classList.add('on')
-    setTimeout(() => {
-      noteDiv.classList.remove('on')
-    }, stepInterval * 0.9)
-
-    let noteNumber = note.number + octave * 12
-
-    console.log(`STEP:${step}, OCT:${octave} -> ${noteNumber}`)
-    outputDevice.playNote(noteNumber, outputChannelSelect.value, { velocity: 1.0, duration: stepInterval * parseFloat(gateSelect.value) })
   }
+  if (mode == 'UP_DOWN_INC' || mode == 'UP_DOWN_EXC') {
+    step += direction
+
+    let bottomStep = mode == 'UP_DOWN_INC' ? 0 : 1
+    let topStep = mode == 'UP_DOWN_INC' ? seqLength : seqLength - 1
+    if (step < bottomStep) {
+      step = 0
+      direction = 1
+    }
+    if (step >= topStep) {
+      step = seqLength - 1
+      direction = -1
+      octave++
+      if (octave >= parseInt(rangeSelect.value)) {
+        octave = 0
+      }
+    }
+  }
+  if (mode == 'RANDOM') {
+    step = Math.floor(Math.random() * seqLength)
+    octave = Math.floor(Math.random() * parseInt(rangeSelect.value)) + 1
+  }
+
+  if (heldNotes.length <= 0) return
+  if (heldNotesSorted.length <= 0) return
+
+  let note
+  if (mode == 'PLAYED') {
+    note = heldNotes[step]
+  } else {
+    note = heldNotesSorted[step]
+  }
+
+  if (!note) return
+
+  let noteDiv = document.getElementById(`note_${note.number}`)
+  noteDiv.classList.add('on')
+  setTimeout(() => {
+    noteDiv.classList.remove('on')
+  }, stepInterval * 0.9)
+
+  let noteNumber = note.number + octave * 12
+
+  console.log(`STEP:${step}, OCT:${octave} -> ${noteNumber}`)
+  outputDevice.playNote(noteNumber, outputChannelSelect.value, { velocity: 1.0, duration: stepInterval * parseFloat(gateSelect.value) })
 }
 
 // =============================================================================
