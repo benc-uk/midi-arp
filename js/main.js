@@ -1,4 +1,4 @@
-import ClockTicker from './clock-ticker.js'
+import { ClockTicker } from './clock-ticker.js'
 import { keyToNote } from './keyboard.js'
 
 // HTML nodes
@@ -12,7 +12,6 @@ let clockModeSelect = null
 let divSelect = null
 let gateSelect = null
 let holdButton = null
-
 let tempoSlider = null
 let notesDiv = null
 
@@ -21,18 +20,15 @@ let inputDevice = null
 let outputDevice = null
 
 // Core
+let hold = false
+let tempo = 120
+let internalClock = null
 let ticks = 0
 let lastStepTime = 0
 let step = 0
 let direction = 1
 let octave = 0
 let doubler = 0
-let hold = false
-
-// Other shit
-
-let tempo = 120
-let internalClock = null
 
 // MIDI input and output
 let heldNotes = []
@@ -108,10 +104,12 @@ window.addEventListener('load', async () => {
     }
   })
 
-  WebMidi.enable(function (err) {
+  // Start here by trying to get MIDI access
+  WebMidi.enable((err) => {
     if (err) {
       document.body.innerHTML = `<div style="text-align: center; font-size: 150%">
-      <h1 style="color:#ee2222">Failed to get MIDI access</h1><br>This is likely because your browser doesn't support MIDI or permissions were not granted<br><br>Try again using Chrome or Edge</div>`
+                                 <h1 style="color:#ee2222">Failed to get MIDI access</h1><br>This is likely because your browser doesn't support MIDI or permissions were not granted<br>
+                                 <br>Try again using Chrome or Edge</div>`
       return
     } else {
       initialize()
@@ -173,8 +171,8 @@ function initalizeArp() {
   inputDevice.removeListener('noteon', 'all')
   inputDevice.removeListener('noteoff', 'all')
   if (internalClock) {
-    internalClock.removeEventListener('tick', handleTick)
-    internalClock.removeEventListener('tick', handleTick)
+    internalClock.removeEventListener('tick', arpClockTick)
+    internalClock.removeEventListener('tick', arpClockTick)
   }
   tempoSlider.disabled = true
 
@@ -187,13 +185,13 @@ function initalizeArp() {
   })
 
   if (clockMode == 'CLOCK_EXTERNAL') {
-    inputDevice.addListener('clock', 'all', handleTick)
+    inputDevice.addListener('clock', 'all', arpClockTick)
   }
 
   if (clockMode == 'CLOCK_INTERNAL' || clockMode == 'CLOCK_INTERNAL_SEND') {
     tempoSlider.disabled = false
     internalClock = new ClockTicker(tempo)
-    internalClock.addEventListener('tick', handleTick)
+    internalClock.addEventListener('tick', arpClockTick)
   }
 
   saveState()
@@ -235,16 +233,37 @@ function removeNote(note) {
       break
     }
   }
+
   try {
     document.getElementById(`note_${note.number}`).remove()
   } catch (e) {}
 }
 
 // =============================================================================
+// Save app state to local storage
+// =============================================================================
+function saveState() {
+  localStorage.setItem(
+    'arp_state',
+    JSON.stringify({
+      tempo: tempo,
+      div: divSelect.value,
+      mode: modeSelect.value,
+      range: rangeSelect.value,
+      gate: gateSelect.value,
+      clockMode: clockModeSelect.value,
+      inputDevice: inputDeviceSelect.value,
+      outputDevice: outputDeviceSelect.value,
+      inputChannel: inputChannelSelect.value,
+      outputChannel: outputChannelSelect.value
+    })
+  )
+}
+
+// =============================================================================
 // Main arpeggiator logic here processed per tick
 // =============================================================================
-
-function handleTick() {
+export function arpClockTick() {
   ticks++
   if (clockModeSelect.value == 'CLOCK_INTERNAL_SEND') {
     outputDevice.sendClock()
@@ -343,27 +362,6 @@ function handleTick() {
     velocity: 1.0,
     duration: stepInterval * parseFloat(gateSelect.value)
   })
-}
-
-// =============================================================================
-// Save app state to local storage
-// =============================================================================
-function saveState() {
-  localStorage.setItem(
-    'arp_state',
-    JSON.stringify({
-      tempo: tempo,
-      div: divSelect.value,
-      mode: modeSelect.value,
-      range: rangeSelect.value,
-      gate: gateSelect.value,
-      clockMode: clockModeSelect.value,
-      inputDevice: inputDeviceSelect.value,
-      outputDevice: outputDeviceSelect.value,
-      inputChannel: inputChannelSelect.value,
-      outputChannel: outputChannelSelect.value
-    })
-  )
 }
 
 // =============================================================================

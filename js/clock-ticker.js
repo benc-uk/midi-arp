@@ -5,7 +5,7 @@
 
 let PPQ = 24
 
-export default class ClockTicker extends EventTarget {
+export class ClockTicker extends EventTarget {
   constructor(tempo = 120) {
     super()
 
